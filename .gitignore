@@ -1,0 +1,13 @@
+# compiled output
+/dist
+
+# dependencies
+/node_modules
+
+# environment variables
+.env
+
+# optional: logs iyo temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
