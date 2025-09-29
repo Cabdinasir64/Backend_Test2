@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, getUsers } from "../controllers/userController";
+import { createUser, getUsers, updateUser, deleteUser } from "../controllers/userController";
 
 const router = Router();
 
@@ -17,6 +17,29 @@ router.post("/", async (req, res) => {
     try {
         const user = await createUser(name, email, password);
         res.status(201).json(user);
+    } catch (err) {
+        res.status(400).json({ error: (err as Error).message });
+    }
+});
+
+router.put("/:id", async (req, res) => {
+    const { id } = req.params;
+    const updateData = req.body;
+    try {
+        const updatedUser = await updateUser(id, updateData);
+        if (!updatedUser) return res.status(404).json({ error: "User not found" });
+        res.json(updatedUser);
+    } catch (err) {
+        res.status(400).json({ error: (err as Error).message });
+    }
+});
+
+router.delete("/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deletedUser = await deleteUser(id);
+        if (!deletedUser) return res.status(404).json({ error: "User not found" });
+        res.json({ message: "User deleted successfully", user: deletedUser });
     } catch (err) {
         res.status(400).json({ error: (err as Error).message });
     }
