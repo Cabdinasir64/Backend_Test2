@@ -13,9 +13,9 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     try {
-        const user = await createUser(name, email, password);
+        const user = await createUser(name, email, password, role);
         res.status(201).json(user);
     } catch (err) {
         res.status(400).json({ error: (err as Error).message });
