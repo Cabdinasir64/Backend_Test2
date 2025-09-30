@@ -20,5 +20,9 @@ const UserSchema = new Schema<IUser>(
     },
 );
 
+UserSchema.index({ email: 1 });
+UserSchema.index({ role: 1 });
+UserSchema.index({ name: "text" });
+
 const User = model<IUser>("Users", UserSchema);
 export default User;
