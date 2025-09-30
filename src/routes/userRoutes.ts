@@ -14,13 +14,20 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
     const { name, email, password, role } = req.body;
+
     try {
-        const user = await createUser(name, email, password, role);
-        res.status(201).json(user);
+        const { user, errors } = await createUser(name, email, password, role);
+
+        if (errors) {
+            return res.status(400).json({ errors });
+        }
+
+        return res.status(201).json({ user });
     } catch (err) {
-        res.status(400).json({ error: (err as Error).message });
+        return res.status(500).json({ error: (err as Error).message });
     }
 });
+
 
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
