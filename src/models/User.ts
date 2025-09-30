@@ -22,6 +22,7 @@ const UserSchema = new Schema<IUser>(
 
 UserSchema.index({ role: 1 });
 UserSchema.index({ name: "text" });
+UserSchema.index({ name: 1 });
 
 const User = model<IUser>("Users", UserSchema);
 export default User;
