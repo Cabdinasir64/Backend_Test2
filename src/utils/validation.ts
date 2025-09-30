@@ -80,7 +80,7 @@ export const ensureUsernameEmailPasswordOK = async (username: string, email: str
         const taken = await isEmailTaken(email);
         if (taken) {
             result.valid = false;
-            result.errors.push("This email is already in use. Please use a different email.");
+            result.errors.push("This email is already in use.");
         }
     } catch (err) {
         result.valid = false;
