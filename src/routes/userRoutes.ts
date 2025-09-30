@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, getUsers, updateUser, deleteUser } from "../controllers/userController";
+import { createUser, getUsers, updateUser, deleteUser, loginUser } from "../controllers/userController";
 
 const router = Router();
 
@@ -50,6 +50,18 @@ router.delete("/:id", async (req, res) => {
         res.json({ message: "User deleted successfully", user: deletedUser });
     } catch (err) {
         res.status(400).json({ error: (err as Error).message });
+    }
+});
+
+router.post("/login", async (req, res) => {
+    const { name, email, password } = req.body;
+    const identifier = email || name;
+    try {
+        const { user, token, error } = await loginUser(identifier, password);
+        if (error) return res.status(401).json({ error });
+        return res.json({ user, token });
+    } catch (err) {
+        return res.status(500).json({ error: (err as Error).message });
     }
 });
 
