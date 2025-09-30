@@ -38,26 +38,24 @@ export const deleteUser = async (id: string): Promise<IUser | null> => {
     return deletedUser;
 };
 
-export const loginUser = async (identifier: string, password: string): Promise<{ user?: IUser; token?: string; error?: string }> => {
+export const loginUser = async (email: string, password: string): Promise<{ user?: Omit<IUser, 'password'>; token?: string; error?: string }> => {
+    try {
+        const user = await User.findOne({ email }).lean();
+        if (!user) return { error: "Invalid email or password" };
 
-    const user = await User.findOne({
-        $or: [{ email: identifier }, { name: identifier }]
-    });
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return { error: "Invalid email or password" };
 
-    if (!user) {
-        return { error: "Invalid email/username or password" };
+        const token = jwt.sign(
+            { id: user._id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '14d' }
+        );
+
+        const { password: _, ...userWithoutPassword } = user;
+        return { user: userWithoutPassword, token };
+
+    } catch (err) {
+        return { error: "Server error" };
     }
-
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-        return { error: "Invalid email/username or password" };
-    }
-
-    const token = jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '14d' }
-    );
-
-    return { user, token };
 };
