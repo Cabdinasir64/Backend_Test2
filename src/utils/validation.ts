@@ -65,7 +65,9 @@ export const ensureUsernameEmailPasswordOK = async (username: string, email: str
 export const validateUsername = (username: string): ValidationResult => {
     const errors: string[] = [];
 
-    if (!username || username.length < 3) {
+    if (!username) {
+        errors.push("Username is required.");
+    } else if (username.length < 3) {
         errors.push("Username must be at least 3 characters long.");
     }
     if (username.length > 30) {
