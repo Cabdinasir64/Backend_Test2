@@ -1,5 +1,5 @@
 import express from "express";
-import cors from "cors";
+import cors from "cors"
 import { connectDB } from "./db";
 import dotenv from "dotenv";
 import { logger } from "./Middleware/logger";
@@ -7,7 +7,6 @@ import userRoutes from "./routes/userRoutes";
 
 
 dotenv.config();
-
 
 const app = express();
 
