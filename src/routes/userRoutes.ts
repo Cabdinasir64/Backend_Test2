@@ -54,10 +54,9 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-    const { name, email, password } = req.body;
-    const identifier = email || name;
+    const { email, password } = req.body;
     try {
-        const { user, token, error } = await loginUser(identifier, password);
+        const { user, token, error } = await loginUser(email, password);
         if (error) return res.status(401).json({ error });
         return res.json({ user, token });
     } catch (err) {
