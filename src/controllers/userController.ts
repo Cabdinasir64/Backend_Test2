@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { TokenExpiredError } from 'jsonwebtoken'
 import dotenv from "dotenv";
 import User, { IUser } from "../models/User";
 import { hashPassword } from '../utils/hash'
@@ -7,8 +7,7 @@ import { ensureUsernameEmailPasswordOK } from "../utils/validation";
 
 dotenv.config();
 
-const JWT_SECRET: string = process.env.JWT_SECRET!;
-const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || "14d";
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const createUser = async (name: string, email: string, password: string, role: "admin" | "user" = "user"): Promise<{ user?: IUser; errors?: string[] }> => {
 
@@ -39,21 +38,25 @@ export const deleteUser = async (id: string): Promise<IUser | null> => {
     return deletedUser;
 };
 
-export const loginUser = async (email: string, password: string): Promise<{ user?: IUser; token?: string; error?: string }> => {
-    const user = await User.findOne({ email });
+export const loginUser = async (identifier: string, password: string): Promise<{ user?: IUser; token?: string; error?: string }> => {
+
+    const user = await User.findOne({
+        $or: [{ email: identifier }, { name: identifier }]
+    });
+
     if (!user) {
-        return { error: "Invalid email or password" };
+        return { error: "Invalid email/username or password" };
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-        return { error: "Invalid email or password" };
+        return { error: "Invalid email/username or password" };
     }
 
     const token = jwt.sign(
         { id: user._id, email: user.email, role: user.role },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
+        { expiresIn: '14d' }
     );
 
     return { user, token };
