@@ -43,7 +43,6 @@ const UserSchema = new Schema<IUserModel2>(
         },
         verificationCode: {
             type: String,
-            required: [true, "Verification code is required"],
             index: true,
         },
     },
