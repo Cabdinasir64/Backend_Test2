@@ -3,7 +3,7 @@ import { createUser, loginUser, verifyUser } from "../controllers/usercontroller
 
 const router = Router();
 
-router.post("/register/", createUser);
+router.post("/register", createUser);
 
 router.post("/login", loginUser);
 
