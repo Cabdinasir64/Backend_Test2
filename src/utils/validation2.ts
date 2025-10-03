@@ -1,6 +1,6 @@
 import UserModel2 from "../models/usermodel";
 
-export const validateUserInput = async (username: string, email: string, password: string, role: string): Promise<string[]> => {
+export const validateUserInput = async (username: string, email: string, password: string): Promise<string[]> => {
     const errors: string[] = [];
 
     if (!username || username.trim().length < 3 || username.trim().length > 20) {
@@ -41,10 +41,5 @@ export const validateUserInput = async (username: string, email: string, passwor
     if (!/[!@#$%^&*]/.test(password)) {
         errors.push("Password must contain at least one special character (!@#$%^&*).");
     }
-
-    if (!role || !["admin", "user"].includes(role)) {
-        errors.push("Role must be either 'admin' or 'user'.");
-    }
-
     return errors;
 };
