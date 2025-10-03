@@ -12,9 +12,9 @@ const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
 export const createUser = async (req: Request, res: Response) => {
     try {
-        const { username, email, password, role } = req.body;
+        const { username, email, password, } = req.body;
 
-        const errors = await validateUserInput(username, email, password, role);
+        const errors = await validateUserInput(username, email, password);
         if (errors.length > 0) {
             return res.status(400).json({ errors });
         }
@@ -26,7 +26,7 @@ export const createUser = async (req: Request, res: Response) => {
             username,
             email,
             password: hashedPassword,
-            role: role || "user",
+            role: "user",
             verified: false,
             verificationCode,
         });
