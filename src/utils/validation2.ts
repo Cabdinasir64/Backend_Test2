@@ -1,5 +1,3 @@
-import UserModel2 from "../models/usermodel";
-
 export const validateUserInput = async (username: string, email: string, password: string): Promise<string[]> => {
     const errors: string[] = [];
 
@@ -19,11 +17,6 @@ export const validateUserInput = async (username: string, email: string, passwor
     const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
     if (!email || !emailRegex.test(email)) {
         errors.push("Invalid email format.");
-    } else {
-        const existingEmail = await UserModel2.findOne({ email });
-        if (existingEmail) {
-            errors.push("Email is already in use.");
-        }
     }
 
     if (!password || password.length < 8) {
@@ -41,5 +34,6 @@ export const validateUserInput = async (username: string, email: string, passwor
     if (!/[!@#$%^&*]/.test(password)) {
         errors.push("Password must contain at least one special character (!@#$%^&*).");
     }
+
     return errors;
 };
