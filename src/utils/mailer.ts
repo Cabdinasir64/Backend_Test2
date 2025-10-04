@@ -20,7 +20,7 @@ export const sendVerificationEmail = async (to: string, code: string) => {
         html: `<h3>Email Verification</h3>
            <p>Your verification code is:</p>
            <h2>${code}</h2>
-           <p>It will expire soon. Please verify your account.</p>`,
+           <p>This code will expire in <b>5 minutes</b>. Please verify your account soon.</p>`,
     };
 
     await transporter.sendMail(mailOptions);
