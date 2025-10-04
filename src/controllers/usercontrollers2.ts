@@ -9,6 +9,7 @@ import { sendVerificationEmail } from "../utils/mailer";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
+
 export const createUser = async (req: Request, res: Response) => {
     try {
         const { username, email, password } = req.body;
@@ -16,6 +17,11 @@ export const createUser = async (req: Request, res: Response) => {
         const errors = await validateUserInput(username, email, password);
         if (errors.length > 0) {
             return res.status(400).json({ errors });
+        }
+
+        const existingUser = await UserModel2.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ errors: ["Email is already registered."] });
         }
 
         const hashedPassword = await hashPassword(password);
@@ -31,12 +37,7 @@ export const createUser = async (req: Request, res: Response) => {
             verificationExpires: expiresAt,
         });
 
-        await newUser.save().catch((err) => {
-            if (err.code === 11000 && err.keyValue.email) {
-                return res.status(400).json({ errors: ["Email is already registered."] });
-            }
-            throw err;
-        });
+        await newUser.save();
 
         await sendVerificationEmail(email, code);
 
@@ -48,7 +49,6 @@ export const createUser = async (req: Request, res: Response) => {
         res.status(500).json({ error: "Server error" });
     }
 };
-
 
 export const loginUser = async (req: Request, res: Response) => {
     try {
