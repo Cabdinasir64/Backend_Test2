@@ -53,6 +53,7 @@ export const createUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
+
         if (!email || !password) {
             return res.status(400).json({ error: "Email and password are required" });
         }
@@ -67,6 +68,10 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Invalid email or password" });
         }
 
+        if (!user.verified) {
+            return res.status(400).json({ error: "User not verified. Please check your email." });
+        }
+
         const token = jwt.sign(
             { id: user._id, email: user.email, role: user.role },
             JWT_SECRET,
@@ -79,6 +84,7 @@ export const loginUser = async (req: Request, res: Response) => {
         res.status(500).json({ error: "Server error" });
     }
 };
+
 
 export const verifyUser = async (req: Request, res: Response) => {
     try {
