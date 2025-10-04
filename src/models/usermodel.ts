@@ -7,6 +7,7 @@ export interface IUserModel2 extends Document {
     role: "admin" | "user";
     verified: boolean;
     verificationCode: string;
+    verificationExpires: Date | null;
 }
 
 const UserSchema = new Schema<IUserModel2>(
@@ -33,30 +34,28 @@ const UserSchema = new Schema<IUserModel2>(
         role: {
             type: String,
             enum: ["admin", "user"],
-            required: [true, "Role is required"],
             default: "user",
+            required: true,
         },
         verified: {
             type: Boolean,
-            required: true,
             default: false,
+            required: true,
         },
         verificationCode: {
             type: String,
             index: true,
         },
+        verificationExpires: {
+            type: Date,
+            default: null,
+        },
     },
-    {
-        timestamps: true,
-        strict: true
-    }
+    { timestamps: true, strict: true }
 );
 
-UserSchema.index({ username: 1 })
-UserSchema.index({ username: "text" });
-UserSchema.index({ role: 1 })
-
+UserSchema.index({ username: 1 });
+UserSchema.index({ role: 1 });
 
 const UserModel2 = model<IUserModel2>("User2", UserSchema);
-
 export default UserModel2;
