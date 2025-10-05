@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import UserModel2 from "../models/usermodel";
+import UserModel2, { IUserModel2 } from "../models/usermodel";
+import { AuthRequest } from './../Middleware/auth'
 import { hashPassword, comparePassword } from "../utils/hash";
 import { validateUserInput } from "../utils/validation2";
 import { generateVerificationCode, verifyCode } from "../utils/code";
@@ -20,7 +21,7 @@ export const createUser = async (req: Request, res: Response) => {
         }
 
         const existingUser = await UserModel2.findOne({ email });
-        if (existingUser) {
+        if (!!existingUser) {
             return res.status(400).json({ errors: ["Email is already registered."] });
         }
 
@@ -69,7 +70,7 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         if (!user.verified) {
-            return res.status(400).json({ error: "User not verified. Please check your email." });
+            return res.status(400).json({ error: "User not verified. Please verified your email." });
         }
 
         const token = jwt.sign(
@@ -78,7 +79,13 @@ export const loginUser = async (req: Request, res: Response) => {
             { expiresIn: "1h" }
         );
 
-        res.status(200).json({ message: "Login successful", token });
+        const objectUser = {
+            username: user.username,
+            email: user.email,
+            role: user.role
+        };
+
+        res.status(200).json({ message: "Login successful", token, user: objectUser });
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Server error" });
@@ -247,6 +254,32 @@ export const resetPassword = async (req: Request, res: Response) => {
         res.status(200).json({ message: "Password reset successfully" });
     } catch (err) {
         console.error("Reset password error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const getAllUsers = async (req: Request, res: Response) => {
+    try {
+        const users = await UserModel2.find().select("-password -verificationCode -verificationExpires");
+
+        res.status(200).json({ users });
+    } catch (err) {
+        console.error("Error fetching users:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+    try {
+        const user: IUserModel2 | null = await UserModel2.findById(req.user.id).select("-password -verificationCode -verificationExpires");
+
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        res.status(200).json({ user });
+    } catch (err) {
+        console.error("Error fetching user:", err);
         res.status(500).json({ error: "Server error" });
     }
 };
