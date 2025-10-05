@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { createUser, loginUser, verifyUser, resendVerificationCode, forgotPassword, verifyCodePassword, resetPassword } from "../controllers/usercontrollers2";
+import { authenticateToken } from './../Middleware/auth'
+import { createUser, loginUser, verifyUser, resendVerificationCode, forgotPassword, verifyCodePassword, resetPassword, getAllUsers, getMe } from "../controllers/usercontrollers2";
 
 const router = Router();
 
@@ -16,6 +17,11 @@ router.post("/forgot-password", forgotPassword);
 router.post("/verify-code-password", verifyCodePassword);
 
 router.post("/reset-password", resetPassword)
+
+router.get("/users", authenticateToken, getAllUsers);
+
+router.get("/me", authenticateToken, getMe);
+
 
 
 export default router;
