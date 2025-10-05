@@ -125,7 +125,9 @@ export const resendVerificationCode = async (req: Request, res: Response) => {
         if (!email) return res.status(400).json({ error: "Email is required" });
 
         const user = await UserModel2.findOne({ email });
+
         if (!user) return res.status(404).json({ error: "User not found" });
+
         if (user.verified) return res.status(400).json({ error: "User already verified" });
 
         const { code, expiresAt } = generateVerificationCode();
@@ -138,6 +140,113 @@ export const resendVerificationCode = async (req: Request, res: Response) => {
         res.status(200).json({ message: "New verification code sent to your email" });
     } catch (err) {
         console.error("Resend code error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await UserModel2.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: "Email not registered" });
+        }
+
+        const { code, expiresAt } = generateVerificationCode();
+
+        user.verificationCode = code;
+        user.verificationExpires = expiresAt;
+        await user.save();
+
+        await sendVerificationEmail(user.email, code);
+
+        return res.status(200).json({ message: "Verification code sent to your email", });
+    } catch (error) {
+        console.error("Error in forgotPassword:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const verifyCodePassword = async (req: Request, res: Response) => {
+    try {
+        const { email, code } = req.body;
+        if (!email || !code) {
+            return res.status(400).json({ error: "Email and verification code are required" });
+        }
+
+        const user = await UserModel2.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const isValid = verifyCode(code, user.verificationCode, user.verificationExpires);
+        if (!isValid) {
+            return res.status(400).json({ error: "Invalid or expired verification code" });
+        }
+
+        user.verificationCode = "";
+        user.verificationExpires = null;
+        await user.save();
+
+        res.status(200).json({ message: "User verified successfully" });
+    } catch (err) {
+        console.error("Verification error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        if (!email || !newPassword) {
+            return res.status(400).json({ error: "Email and new password are required" });
+        }
+
+        const user = await UserModel2.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        if (!user.verified) {
+            return res.status(400).json({ error: "User not verified yet" });
+        }
+
+        const errors: string[] = [];
+
+        if (!newPassword || newPassword.length < 8) {
+            errors.push("Password must be at least 8 characters.");
+        }
+        if (!/[A-Z]/.test(newPassword)) {
+            errors.push("Password must contain at least one uppercase letter.");
+        }
+        if (!/[a-z]/.test(newPassword)) {
+            errors.push("Password must contain at least one lowercase letter.");
+        }
+        if (!/[0-9]/.test(newPassword)) {
+            errors.push("Password must contain at least one digit.");
+        }
+        if (!/[!@#$%^&*]/.test(newPassword)) {
+            errors.push("Password must contain at least one special character (!@#$%^&*).");
+        }
+
+        if (errors.length > 0) {
+            return res.status(400).json({ error: errors.join(" ") });
+        }
+
+        user.password = await hashPassword(newPassword);
+
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successfully" });
+    } catch (err) {
+        console.error("Reset password error:", err);
         res.status(500).json({ error: "Server error" });
     }
 };
