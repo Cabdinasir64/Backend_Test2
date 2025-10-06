@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { logger } from "./Middleware/logger";
 import userRoutes from "./routes/userRoutes";
 import userRoutes2 from './routes/userroutes2'
+import { limiter } from './Middleware/rateLimiter'
 
 
 dotenv.config();
@@ -21,7 +22,7 @@ app.use(express.json());
 
 app.use(logger);
 app.use("/api/users", userRoutes);
-app.use("/api/users2", userRoutes2);
+app.use("/api/users2", limiter, userRoutes2);
 
 const PORT = process.env.PORT || 3000;
 
