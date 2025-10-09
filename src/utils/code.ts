@@ -3,7 +3,6 @@ export const generateVerificationCode = () => {
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
     return { code, expiresAt };
 };
-
 export const verifyCode = (inputCode: string, userCode: string, expiresAt: Date | null) => {
     if (!userCode || !expiresAt) return false;
     const now = new Date();
