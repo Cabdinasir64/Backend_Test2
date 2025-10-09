@@ -1,4 +1,5 @@
 export const validateUserInput = async (username: string, email: string, password: string): Promise<string[]> => {
+    
     const errors: string[] = [];
 
     if (!username || username.trim().length < 3 || username.trim().length > 20) {
