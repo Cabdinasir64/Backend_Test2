@@ -1,5 +1,4 @@
 import User from "../models/User";
-import { hashPassword } from "./hash";
 
 type ValidationResult = {
     valid: boolean;
