@@ -2,7 +2,6 @@ import { Router } from "express";
 import { createUser, getUsers, updateUser, deleteUser, loginUser } from "../controllers/userController";
 
 const router = Router();
-
 router.get("/", async (req, res) => {
     try {
         const users = await getUsers();
