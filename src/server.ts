@@ -21,6 +21,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use(logger);
+
 app.use("/api/users", userRoutes);
 app.use("/api/users2", limiter, userRoutes2);
 
