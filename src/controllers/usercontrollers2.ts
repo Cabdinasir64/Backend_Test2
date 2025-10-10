@@ -269,6 +269,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
     }
 };
 
+
 export const getMe = async (req: AuthRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
