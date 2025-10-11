@@ -6,6 +6,8 @@ import { logger } from "./Middleware/logger";
 import userRoutes from "./routes/userRoutes";
 import userRoutes2 from './routes/userroutes2'
 import { limiter } from './Middleware/rateLimiter'
+import cookieParser from "cookie-parser"
+
 
 
 dotenv.config();
@@ -17,6 +19,8 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
+
+app.use(cookieParser())
 
 app.use(express.json());
 
