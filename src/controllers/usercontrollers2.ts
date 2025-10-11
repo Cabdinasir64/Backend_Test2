@@ -76,22 +76,41 @@ export const loginUser = async (req: Request, res: Response) => {
         const token = jwt.sign(
             { id: user._id, email: user.email, role: user.role },
             JWT_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: "1d" }
         );
 
-        const objectUser = {
-            username: user.username,
-            email: user.email,
-            role: user.role
-        };
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+            maxAge: 24 * 60 * 60 * 1000,
+        });
 
-        res.status(200).json({ message: "Login successful", token, user: objectUser });
+        res.status(200).json({
+            message: "Login successful", user: {
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                redirect: user.role === "admin" ? "/admin/dashboard"
+                    : user.role === "user" ? "/user/dashboard"
+                        : "/"
+            }
+        });
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Server error" });
     }
 };
 
+export const logoutUser = (req: Request, res: Response) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict",
+    });
+
+    res.status(200).json({ message: "Logged out successfully" });
+};
 
 export const verifyUser = async (req: Request, res: Response) => {
     try {
