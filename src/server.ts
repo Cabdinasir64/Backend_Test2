@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes";
 import userRoutes2 from './routes/userroutes2'
 import { limiter } from './Middleware/rateLimiter'
 import cookieParser from "cookie-parser"
+import postRoutes from "./routes/postRoutes";
 
 
 
@@ -28,6 +29,7 @@ app.use(logger);
 
 app.use("/api/users", userRoutes);
 app.use("/api/users2", limiter, userRoutes2);
+app.use("/api/posts", postRoutes);
 
 const PORT = process.env.PORT || 3000;
 
