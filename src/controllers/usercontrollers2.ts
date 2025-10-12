@@ -279,11 +279,93 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
-        const users = await UserModel2.find().select("-password -verificationCode -verificationExpires");
+        const search = (req.query.search as string) || "";
+        const filter = (req.query.filter as string) || "";
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = 2;
+        const skip = (page - 1) * limit;
 
-        res.status(200).json({ users });
+        let query: any = {};
+        if (search) {
+            query.username = { $regex: search, $options: "i" };
+        }
+
+        let sort: any = {};
+        if (filter === "createdate_asc") {
+            sort.createdAt = 1;
+        } else if (filter === "createdate_desc") {
+            sort.createdAt = -1;
+        }
+
+        const users = await UserModel2.find(query)
+            .select("-password -verificationCode -verificationExpires")
+            .sort(sort)
+            .skip(skip)
+            .limit(limit);
+
+        const totalUsers = await UserModel2.countDocuments(query);
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        res.status(200).json({
+            users,
+            page,
+            totalPages,
+            totalUsers,
+        });
     } catch (err) {
         console.error("Error fetching users:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const deleteUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const user = req.user;
+        if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+        if (user.id === id && user.role === "admin") {
+            return res.status(400).json({ error: "Admin cannot delete their own account" });
+        }
+
+        const deleted = await UserModel2.findByIdAndDelete(id);
+        if (!deleted) return res.status(404).json({ error: "User not found" });
+
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const updateUserRole = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+
+        if (!["admin", "user"].includes(role)) {
+            return res.status(400).json({ error: "Invalid role" });
+        }
+
+        const currentUser = req.user;
+        if (!currentUser) return res.status(401).json({ error: "Unauthorized" });
+
+        if (currentUser.id === id && currentUser.role === "admin") {
+            return res.status(400).json({ error: "Admin cannot change their own role" });
+        }
+
+        const updated = await UserModel2.findByIdAndUpdate(
+            id,
+            { role },
+            { new: true }
+        );
+
+        if (!updated) return res.status(404).json({ error: "User not found" });
+
+        res.status(200).json({ message: "Role updated successfully", user: updated });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 };
