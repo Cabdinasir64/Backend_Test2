@@ -385,3 +385,60 @@ export const getMe = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: "Server error" });
     }
 };
+
+export const changePassword = async (req: AuthRequest, res: Response) => {
+    try {
+        const { pastPassword, newPassword } = req.body;
+        if (!pastPassword || !newPassword) {
+            return res.status(400).json({ error: "Both pastPassword and newPassword are required" });
+        }
+
+        const user = await UserModel2.findById(req.user!.id);
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        const isMatch = await comparePassword(pastPassword, user.password);
+        if (!isMatch) return res.status(400).json({ error: "Past password is incorrect" });
+
+        const isSamePassword = await comparePassword(newPassword, user.password);
+        if (isSamePassword) {
+            return res.status(400).json({ error: "New password cannot be the same as the current password." });
+        }
+
+        const errors: string[] = [];
+        if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
+        if (!/[A-Z]/.test(newPassword)) errors.push("Password must contain at least one uppercase letter.");
+        if (!/[a-z]/.test(newPassword)) errors.push("Password must contain at least one lowercase letter.");
+        if (!/[0-9]/.test(newPassword)) errors.push("Password must contain at least one digit.");
+        if (!/[!@#$%^&*]/.test(newPassword)) errors.push("Password must contain at least one special character (!@#$%^&*).");
+
+        if (errors.length > 0) {
+            return res.status(400).json({ error: errors.join(" ") });
+        }
+
+        user.password = await hashPassword(newPassword);
+        await user.save();
+
+        res.status(200).json({ message: "Password changed successfully" });
+    } catch (err) {
+        console.error("Change password error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+export const changeUsername = async (req: AuthRequest, res: Response) => {
+    try {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ error: "Username is required" });
+
+        const user = await UserModel2.findByIdAndUpdate(
+            req.user!.id,
+            { username },
+            { new: true }
+        ).select("-password -verificationCode -verificationExpires");
+
+        res.status(200).json({ message: "Username updated successfully", user });
+    } catch (err) {
+        console.error("Change username error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+};
