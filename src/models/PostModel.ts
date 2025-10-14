@@ -1,6 +1,5 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
 
-
 export interface IPost extends Document {
     user: mongoose.Types.ObjectId;
     title: string;
@@ -9,14 +8,14 @@ export interface IPost extends Document {
     likes: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
+    likeCount?: number;
 }
-
 
 const PostSchema: Schema<IPost> = new Schema<IPost>(
     {
         user: {
             type: Schema.Types.ObjectId,
-            ref: "UserModel2",
+            ref: "User2",
             required: true,
         },
         title: {
@@ -39,7 +38,7 @@ const PostSchema: Schema<IPost> = new Schema<IPost>(
         likes: [
             {
                 type: Schema.Types.ObjectId,
-                ref: "UserModel2",
+                ref: "User2",
             },
         ],
     },
@@ -49,8 +48,6 @@ const PostSchema: Schema<IPost> = new Schema<IPost>(
         strict: true,
     }
 );
-
-PostSchema.index({ createdAt: -1 });
 
 PostSchema.virtual("likeCount").get(function (this: IPost) {
     return this.likes.length;
@@ -64,6 +61,7 @@ PostSchema.set("toJSON", {
     },
 });
 
-const PostModel: Model<IPost> = mongoose.model<IPost>("Post", PostSchema);
+PostSchema.index({ user: 1, createdAt: -1 });
 
+const PostModel: Model<IPost> = mongoose.model<IPost>("Post", PostSchema);
 export default PostModel;
