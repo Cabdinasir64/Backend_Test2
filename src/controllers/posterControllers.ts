@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import PostModel, { IPost } from "../models/PostModel";
 import { AuthRequest } from "../Middleware/auth";
+import cloudinary from "../utils/cloudinary";
 
 export const addPost = async (req: AuthRequest, res: Response) => {
     try {
-        const { title, content, image } = req.body;
+        const { title, content } = req.body;
+        const image = req.file?.path;
 
         if (!title || !content || !image) {
             return res.status(400).json({ error: "Title, content, and image are required" });
@@ -29,7 +31,8 @@ export const addPost = async (req: AuthRequest, res: Response) => {
 export const updatePost = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { title, content, image } = req.body;
+        const { title, content } = req.body;
+        const image = req.file?.path;
 
         const post = await PostModel.findById(id);
         if (!post) return res.status(404).json({ error: "Post not found" });
@@ -49,7 +52,7 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
         console.error("Update post error:", err);
         res.status(500).json({ error: "Server error" });
     }
-};
+}
 
 export const deletePost = async (req: AuthRequest, res: Response) => {
     try {
@@ -60,6 +63,14 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
 
         if (post.user.toString() !== req.user!.id && req.user!.role !== "user") {
             return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        if (post.image) {
+            const parts = post.image.split("/");
+            const publicIdWithExt = parts[parts.length - 1];
+            const publicId = publicIdWithExt.split(".")[0];
+
+            await cloudinary.uploader.destroy(`uploads/${publicId}`);
         }
 
         await PostModel.findByIdAndDelete(id);
@@ -74,7 +85,8 @@ export const deletePost = async (req: AuthRequest, res: Response) => {
 export const getAllPosts = async (req: Request, res: Response) => {
     try {
         const posts = await PostModel.find()
-            .populate("users2", "username email")
+            .populate("user", "username email")
+            .populate("likes", "username email")
             .sort({ createdAt: -1 });
 
         res.status(200).json({ posts });
@@ -87,7 +99,11 @@ export const getAllPosts = async (req: Request, res: Response) => {
 export const getPostById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const post = await PostModel.findById(id).populate("user", "username email");
+
+        const post = await PostModel.findById(id)
+            .populate("user", "username email")
+            .populate("likes", "username email");
+
         if (!post) return res.status(404).json({ error: "Post not found" });
 
         res.status(200).json({ post });
