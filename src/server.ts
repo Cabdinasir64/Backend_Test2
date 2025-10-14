@@ -29,7 +29,7 @@ app.use(logger);
 
 app.use("/api/users", userRoutes);
 app.use("/api/users2", limiter, userRoutes2);
-app.use("/api/posts", postRoutes);
+app.use("/api/posts", limiter, postRoutes);
 
 const PORT = process.env.PORT || 3000;
 
